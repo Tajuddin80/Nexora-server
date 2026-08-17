@@ -5,7 +5,7 @@ const User = require("../../models/User");
 const SALT_ROUNDS = 10;
 
 const createOrUpdateUserInDB = async (userData) => {
-  const { email, password, role, last_log_in, created_at } = userData;
+  const { email, password, last_log_in, created_at } = userData;
 
   const userExists = await User.findOne({ email });
   if (userExists) {
@@ -29,10 +29,11 @@ const createOrUpdateUserInDB = async (userData) => {
     hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   }
 
+  // Security: New registrations always default to "user" role to prevent privilege escalation exploits
   const user = await User.create({
     email,
     password: hashedPassword,
-    role: role || "user",
+    role: "user",
     last_log_in,
     created_at,
   });
@@ -63,7 +64,11 @@ const loginUserService = async (email, password) => {
     throw { status: 401, message: "Invalid email or password" };
   }
 
-  const secret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET || "nexora_secret_key";
+  const secret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    throw { status: 500, message: "Server configuration error: missing auth secret" };
+  }
+
   const token = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     secret,

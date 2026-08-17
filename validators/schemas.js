@@ -14,6 +14,18 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const createApartmentSchema = z.object({
+  apartmentNo: z.string().min(1, "Apartment number is required"),
+  floorNo: z.number().optional(),
+  blockName: z.string().optional(),
+  rent: z.number().positive("Rent must be positive"),
+  image: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  video: z.string().optional(),
+  details: z.string().optional(),
+  available: z.boolean().optional(),
+});
+
 const agreementSchema = z.object({
   userName: z.string().optional(),
   userEmail: z.string().email("Invalid user email"),
@@ -71,6 +83,7 @@ const validate = (schema) => (req, res, next) => {
 module.exports = {
   userSchema,
   loginSchema,
+  createApartmentSchema,
   agreementSchema,
   couponSchema,
   announcementSchema,

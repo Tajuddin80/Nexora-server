@@ -18,7 +18,7 @@
 ## ✨ Features
 
 ✅ **Layered Modular Architecture** (Routes, Controllers, Services)  
-✅ **Better Auth Integration** (`better-auth`) for session & email/password authentication  
+✅ **Better Auth & Dual Token Verification** (`better-auth` sessions & Bearer JWT authorization)  
 ✅ **Password Hashing** via `bcryptjs` (salt rounds: 10)  
 ✅ **Strict Request Body Validation** using `Zod` schemas  
 ✅ **Role-Based Authorization** (Admin / Member / User)  
@@ -29,6 +29,7 @@
 ✅ **Automated Monthly Rent Generation** via `node-cron`  
 ✅ **Announcements System** for property notices  
 ✅ **Admin Dashboard Statistics** with MongoDB aggregation pipelines  
+✅ **Vercel Serverless Function** ready with zero cold-start database latency  
 
 ---
 
@@ -50,17 +51,20 @@
 
 ```
 Nexora-server/
+├── api/
+│   └── index.js                     # Vercel Serverless Function entry point
 ├── app.js                           # Express application & global middleware
 ├── server.js                        # Database connection & server listener
-├── index.js                         # Main entry point (Exports app for Vercel/Local)
+├── index.js                         # Main entry point (Local execution & Bun polyfill)
+├── vercel.json                      # Vercel Serverless rewrites configuration
 ├── .env.example                     # Environment variables template
 ├── config/
-│   ├── auth.js                      # Better Auth configuration & MongoDB adapter
-│   └── db.js                        # Mongoose database connection setup
+│   ├── auth.js                      # Lazy Better Auth configuration & MongoDB adapter
+│   └── db.js                        # Mongoose database connection setup with timeout protection
 ├── cron/
 │   └── rentCron.js                  # Monthly rent generation cron job
 ├── middleware/
-│   └── auth.js                      # Better Auth session & role authorization
+│   └── auth.js                      # Dual Bearer JWT & Better Auth session authorization
 ├── validators/
 │   └── schemas.js                   # Zod request validation schemas & middleware
 ├── models/                          # Mongoose Database Schemas
@@ -95,8 +99,8 @@ PORT=5000
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/Nexora?retryWrites=true&w=majority
 STRIPE_SECRET_KEY=sk_test_51...
 
-BETTER_AUTH_SECRET=your_super_secret_better_auth_key_here
-BETTER_AUTH_URL=http://localhost:5000
+BETTER_AUTH_SECRET=nexora_better_auth_secret_key_12345
+BETTER_AUTH_URL=https://nexora-server-nine.vercel.app
 ```
 
 ---
@@ -130,19 +134,19 @@ bun dev
 
 ## 🌐 API Reference
 
-### 🔐 Authentication (`Better Auth`)
+### 🔐 Authentication (`Better Auth` & JWT)
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | ALL | `/api/auth/*` | Better Auth handlers (Sign In, Sign Up, Sign Out, Session) | Public |
-| POST | `/users/login` | Email & password login (returns JWT/Session) | Public |
+| POST | `/users/login` | Email & password login (returns JWT & User Role) | Public |
 
 ### 👤 Users
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/users` | Create or update user account | Public (Zod) |
-| GET | `/users/:email/role` | Get user role (`user`, `member`, `admin`) | Session |
+| GET | `/users/:email/role` | Get user role (`user`, `member`, `admin`) | Session / Bearer JWT |
 
 ### 🏢 Apartments
 
@@ -154,10 +158,10 @@ bun dev
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| POST | `/agreements` | Apply for an apartment agreement | Session (Zod) |
+| POST | `/agreements` | Apply for an apartment agreement | Session / Bearer JWT |
 | GET | `/agreements?status=pending` | Get agreements by status | Admin |
 | PATCH | `/agreements/:id` | Accept or reject agreement request | Admin |
-| GET | `/agreements/user/:email` | Get user's agreements list | Session |
+| GET | `/agreements/user/:email` | Get user's agreements list | Session / Bearer JWT |
 
 ### 🎟️ Coupons
 
@@ -174,15 +178,15 @@ bun dev
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/create-payment-intent` | Create Stripe PaymentIntent with optional coupon discount | Member (Zod) |
-| POST | `/rent-payments` | Record successful rent payment | Session (Zod) |
-| GET | `/rent-payments/:email` | Get rent payments history for user | Session |
-| PATCH | `/rent-payments/:id` | Update rent payment status | Session |
+| POST | `/rent-payments` | Record successful rent payment | Session / Bearer JWT |
+| GET | `/rent-payments/:email` | Get rent payments history for user | Session / Bearer JWT |
+| PATCH | `/rent-payments/:id` | Update rent payment status | Session / Bearer JWT |
 
 ### 📢 Announcements
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| GET | `/announcements` | Get list of announcements | Session |
+| GET | `/announcements` | Get list of announcements | Session / Bearer JWT |
 | POST | `/announcements` | Create new announcement | Admin (Zod) |
 | PATCH | `/announcements/:id` | Update announcement by ID | Admin (Zod) |
 | DELETE | `/announcements/:id` | Delete announcement by ID | Admin |

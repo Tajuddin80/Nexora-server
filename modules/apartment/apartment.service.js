@@ -29,6 +29,17 @@ const getApartmentsFromDB = async (queryFilters) => {
   };
 };
 
+const createApartmentInDB = async (apartmentData, adminEmail) => {
+  if (adminEmail) {
+    apartmentData.createdBy = adminEmail;
+  }
+  if (!apartmentData.image && apartmentData.images && apartmentData.images.length > 0) {
+    apartmentData.image = apartmentData.images[0];
+  }
+  return await Apartment.create(apartmentData);
+};
+
 module.exports = {
   getApartmentsFromDB,
+  createApartmentInDB,
 };

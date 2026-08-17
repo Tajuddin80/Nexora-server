@@ -8,6 +8,10 @@ const apartmentSchema = new mongoose.Schema(
     rent: { type: Number, required: true },
     available: { type: Boolean, default: true },
     image: { type: String },
+    images: [{ type: String }],
+    video: { type: String, default: "" },
+    details: { type: String, default: "" },
+    createdBy: { type: String },
   },
   { timestamps: true, collection: "allApartments" }
 );
