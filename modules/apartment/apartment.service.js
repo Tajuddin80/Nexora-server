@@ -29,6 +29,10 @@ const getApartmentsFromDB = async (queryFilters) => {
   };
 };
 
+const getApartmentByIdFromDB = async (id) => {
+  return await Apartment.findById(id);
+};
+
 const createApartmentInDB = async (apartmentData, adminEmail) => {
   if (adminEmail) {
     apartmentData.createdBy = adminEmail;
@@ -39,7 +43,13 @@ const createApartmentInDB = async (apartmentData, adminEmail) => {
   return await Apartment.create(apartmentData);
 };
 
+const updateApartmentInDB = async (id, apartmentData) => {
+  return await Apartment.findByIdAndUpdate(id, apartmentData, { new: true });
+};
+
 module.exports = {
   getApartmentsFromDB,
+  getApartmentByIdFromDB,
   createApartmentInDB,
+  updateApartmentInDB,
 };

@@ -33,7 +33,11 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   socket.on("join_room", (userEmail) => {
     if (userEmail) {
-      socket.join(userEmail);
+      const lower = userEmail.toLowerCase();
+      socket.join(lower);
+      if (lower === "admin@nexora.com" || lower === process.env.ADMIN_EMAIL?.toLowerCase()) {
+        socket.join("admin_room");
+      }
     }
   });
 
@@ -49,8 +53,15 @@ io.on("connection", (socket) => {
         read: false,
       });
 
-      io.to(recipientEmail).emit("receive_message", newMsg);
-      io.to(senderEmail).emit("receive_message", newMsg);
+      const recipientLower = (recipientEmail || "").toLowerCase();
+      const senderLower = (senderEmail || "").toLowerCase();
+
+      io.to(recipientLower).emit("receive_message", newMsg);
+      io.to(senderLower).emit("receive_message", newMsg);
+
+      if (recipientLower === "admin@nexora.com" || recipientLower === process.env.ADMIN_EMAIL?.toLowerCase()) {
+        io.to("admin_room").emit("receive_message", newMsg);
+      }
     } catch (err) {
       console.error("Socket send_message error:", err.message);
     }
@@ -62,7 +73,7 @@ io.on("connection", (socket) => {
         { senderEmail, recipientEmail: userEmail, read: false },
         { $set: { read: true } }
       );
-      io.to(senderEmail).emit("messages_read", { userEmail, senderEmail });
+      io.to(senderEmail?.toLowerCase()).emit("messages_read", { userEmail, senderEmail });
     } catch (err) {
       console.error("Socket mark_read error:", err.message);
     }
