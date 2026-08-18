@@ -4,7 +4,25 @@ const Agreement = require("../../models/Agreement");
 const Apartment = require("../../models/Apartment");
 const RentPayment = require("../../models/RentPayment");
 
+const syncMemberRoles = async () => {
+  try {
+    const acceptedAgreements = await Agreement.find({ status: "accepted" });
+    for (const ag of acceptedAgreements) {
+      if (ag.userEmail) {
+        await User.updateOne(
+          { email: { $regex: new RegExp(`^${ag.userEmail.trim()}$`, "i") } },
+          { $set: { role: "member" } }
+        );
+      }
+    }
+  } catch (err) {
+    console.error("syncMemberRoles error:", err);
+  }
+};
+
 const getMembersFromDB = async () => {
+  await syncMemberRoles();
+
   return await User.aggregate([
     { $match: { role: "member" } },
     {
@@ -39,7 +57,7 @@ const getMembersFromDB = async () => {
 
 const removeMemberInDB = async (email) => {
   const agreement = await Agreement.findOne({
-    userEmail: email,
+    userEmail: { $regex: new RegExp(`^${email.trim()}$`, "i") },
     status: "accepted",
   });
 
@@ -53,26 +71,29 @@ const removeMemberInDB = async (email) => {
     });
   }
 
+  // Update Agreement status to rejected or removed so it doesn't stay accepted
+  await Agreement.findByIdAndUpdate(agreement._id, {
+    $set: { status: "rejected", decisionAt: new Date() },
+  });
+
   const updateRes = await User.updateOne(
-    { email },
+    { email: { $regex: new RegExp(`^${email.trim()}$`, "i") } },
     { $set: { role: "user" } }
   );
-
-  if (updateRes.matchedCount === 0) {
-    throw { status: 404, message: "Member not found" };
-  }
 
   return true;
 };
 
 const getMemberDueMonthsFromDB = async (email) => {
   return await RentPayment.find(
-    { userEmail: email, status: "unpaid" },
+    { userEmail: { $regex: new RegExp(`^${email.trim()}$`, "i") }, status: "unpaid" },
     "month amount"
   );
 };
 
 const getAdminStatsFromDB = async () => {
+  await syncMemberRoles();
+
   const roomStats = await Apartment.aggregate([
     {
       $group: {
@@ -126,35 +147,18 @@ const getAdminStatsFromDB = async () => {
     unavailablePercentage: 0,
   };
 
-  const userStats = await User.aggregate([
-    {
-      $group: {
-        _id: null,
-        totalUsers: { $sum: 1 },
-        membersCount: {
-          $sum: {
-            $cond: [{ $eq: ["$role", "member"] }, 1, 0],
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        totalUsers: 1,
-        membersCount: 1,
-      },
-    },
-  ]);
+  const totalUsers = await User.countDocuments();
+  const dbMembersCount = await User.countDocuments({ role: "member" });
+  const acceptedAgreementsCount = await Agreement.countDocuments({ status: "accepted" });
 
-  const users = userStats[0] || { totalUsers: 0, membersCount: 0 };
+  const finalMembersCount = Math.max(dbMembersCount, acceptedAgreementsCount);
 
   return {
     totalRooms: rooms.total,
     availablePercentage: rooms.availablePercentage,
     unavailablePercentage: rooms.unavailablePercentage,
-    totalUsers: users.totalUsers,
-    membersCount: users.membersCount,
+    totalUsers: Math.max(totalUsers, finalMembersCount),
+    membersCount: finalMembersCount,
   };
 };
 
