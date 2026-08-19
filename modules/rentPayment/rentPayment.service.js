@@ -46,7 +46,7 @@ const createPaymentIntentService = async (intentData) => {
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountInCents,
-    currency: "bdt",
+    currency: "usd",
     payment_method_types: ["card"],
     metadata: {
       userEmail,
@@ -63,17 +63,6 @@ const createPaymentIntentService = async (intentData) => {
 const recordRentPaymentInDB = async (paymentData) => {
   const { userEmail, apartmentId, month, transactionId, couponCode = null } = paymentData;
 
-  const unpaid = await RentPayment.findOne({
-    userEmail,
-    apartmentId,
-    month,
-    status: "unpaid",
-  });
-
-  if (!unpaid) {
-    throw { status: 400, message: "No unpaid rent found for this apartment and month" };
-  }
-
   const paymentIntent = await stripe.paymentIntents.retrieve(transactionId);
   if (!paymentIntent || paymentIntent.status !== "succeeded") {
     throw { status: 400, message: "Payment not completed or invalid" };
@@ -84,19 +73,40 @@ const recordRentPaymentInDB = async (paymentData) => {
     ? parseInt(paymentIntent.metadata.discountPercent)
     : 0;
 
-  await RentPayment.updateOne(
-    { _id: unpaid._id },
-    {
-      $set: {
-        status: "paid",
-        paidAt: new Date(),
-        amount: actualAmount,
-        transactionId: paymentIntent.id,
-        couponCode: couponCode || null,
-        discountPercent,
-      },
-    }
-  );
+  const unpaid = await RentPayment.findOne({
+    userEmail,
+    apartmentId,
+    month,
+    status: "unpaid",
+  });
+
+  if (unpaid) {
+    await RentPayment.updateOne(
+      { _id: unpaid._id },
+      {
+        $set: {
+          status: "paid",
+          paidAt: new Date(),
+          amount: actualAmount,
+          transactionId: paymentIntent.id,
+          couponCode: couponCode || null,
+          discountPercent,
+        },
+      }
+    );
+  } else {
+    await RentPayment.create({
+      userEmail,
+      apartmentId,
+      month,
+      amount: actualAmount,
+      status: "paid",
+      paidAt: new Date(),
+      transactionId: paymentIntent.id,
+      couponCode: couponCode || null,
+      discountPercent,
+    });
+  }
 
   await User.updateOne(
     {

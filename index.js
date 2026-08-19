@@ -17,7 +17,7 @@ require("dotenv").config();
 const http = require("http");
 const { Server } = require("socket.io");
 const app = require("./app");
-const initRentCron = require("./cron/rentCron");
+const { initRentCron } = require("./cron/rentCron");
 const Message = require("./models/Message");
 
 const PORT = process.env.PORT || 5000;

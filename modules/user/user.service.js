@@ -87,7 +87,28 @@ const loginUserService = async (email, password) => {
 };
 
 const getUserRoleFromDB = async (email) => {
-  const user = await User.findOne({ email });
+  if (!email) return "user";
+  const emailRegex = new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, "i");
+  let user = await User.findOne({ email: emailRegex });
+
+  const Agreement = require("../../models/Agreement");
+  const activeAgreement = await Agreement.findOne({
+    userEmail: emailRegex,
+    status: "accepted",
+  });
+
+  if (activeAgreement) {
+    if (user) {
+      if (user.role !== "member" && user.role !== "admin") {
+        await User.updateOne({ _id: user._id }, { $set: { role: "member" } });
+        return "member";
+      }
+    } else {
+      await User.create({ email, role: "member" });
+      return "member";
+    }
+  }
+
   if (!user) {
     return "user";
   }

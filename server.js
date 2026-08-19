@@ -1,7 +1,7 @@
 require("dotenv").config();
 const app = require("./app");
 const connectDB = require("./config/db");
-const initRentCron = require("./cron/rentCron");
+const { initRentCron } = require("./cron/rentCron");
 
 const PORT = process.env.PORT || 5000;
 

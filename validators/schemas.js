@@ -66,7 +66,8 @@ const paymentIntentSchema = z.object({
   userEmail: z.string().email("Invalid user email"),
   apartmentNo: z.string().min(1, "Apartment number is required"),
   fullName: z.string().optional(),
-  couponCode: z.string().optional(),
+  couponCode: z.string().nullable().optional(),
+  discountPercent: z.number().optional(),
 });
 
 const validate = (schema) => (req, res, next) => {
