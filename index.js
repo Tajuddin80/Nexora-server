@@ -17,6 +17,8 @@ require("dotenv").config();
 const http = require("http");
 const { Server } = require("socket.io");
 const app = require("./app");
+const connectDB = require("./config/db");
+const initAdmin = require("./config/initAdmin");
 const { initRentCron } = require("./cron/rentCron");
 const Message = require("./models/Message");
 
@@ -81,10 +83,21 @@ io.on("connection", (socket) => {
 });
 
 if (!process.env.VERCEL) {
-  initRentCron();
-  server.listen(PORT, () => {
-    console.log(`Nexora HTTP & Socket.IO server listening on port ${PORT}`);
-  });
+  const startServer = async () => {
+    try {
+      await connectDB();
+      await initAdmin();
+      initRentCron();
+      server.listen(PORT, () => {
+        console.log(`Nexora HTTP & Socket.IO server listening on port ${PORT}`);
+      });
+    } catch (err) {
+      console.error("Failed to start server:", err);
+      process.exit(1);
+    }
+  };
+
+  startServer();
 }
 
 module.exports = app;

@@ -9,8 +9,8 @@ const createPaymentIntentService = async (intentData) => {
   const { userEmail, apartmentNo, fullName, couponCode } = intentData;
 
   const agreement = await Agreement.findOne({
-    userEmail,
-    apartmentNo,
+    userEmail: { $regex: new RegExp(`^${(userEmail || "").trim()}$`, "i") },
+    apartmentNo: { $regex: new RegExp(`^${(apartmentNo || "").trim()}$`, "i") },
     status: "accepted",
   });
 
@@ -121,7 +121,9 @@ const recordRentPaymentInDB = async (paymentData) => {
 };
 
 const getRentPaymentsForUserFromDB = async (email, status) => {
-  const filter = { userEmail: email };
+  const filter = {
+    userEmail: { $regex: new RegExp(`^${(email || "").trim()}$`, "i") },
+  };
   if (status) filter.status = status;
   return await RentPayment.find(filter);
 };

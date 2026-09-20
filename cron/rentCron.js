@@ -1,10 +1,12 @@
 const cron = require("node-cron");
+const connectDB = require("../config/db");
 const User = require("../models/User");
 const Agreement = require("../models/Agreement");
 const Apartment = require("../models/Apartment");
 const RentPayment = require("../models/RentPayment");
 
 const processMonthlyRentAndPenalties = async () => {
+  await connectDB();
   console.log("⚡ Executing Monthly Rent Calculation & 3-Month Penalty Check...");
   const now = new Date();
 

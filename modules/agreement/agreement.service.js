@@ -165,7 +165,9 @@ const updateAgreementStatusInDB = async (id, action, userEmail) => {
 };
 
 const getUserAgreementsFromDB = async (email, status) => {
-  const filter = { userEmail: email };
+  const filter = {
+    userEmail: { $regex: new RegExp(`^${(email || "").trim()}$`, "i") },
+  };
   if (status) filter.status = status;
   return await Agreement.find(filter);
 };

@@ -60,10 +60,17 @@ app.use(
 app.use(express.json());
 
 // Serverless DB Connection Middleware
+let adminInitialized = false;
 app.use(async (req, res, next) => {
   try {
     await connectDB();
-    initAdmin().catch(console.error);
+    if (!adminInitialized) {
+      adminInitialized = true;
+      initAdmin().catch((err) => {
+        adminInitialized = false;
+        console.error("Error in initAdmin:", err);
+      });
+    }
   } catch (err) {
     console.error("DB connection error in middleware:", err);
   }
