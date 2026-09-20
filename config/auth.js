@@ -9,8 +9,8 @@ const getAuth = async () => {
   await connectDB();
 
   if (!authInstance) {
-    const { betterAuth } = require("better-auth");
-    const { mongodbAdapter } = require("better-auth/adapters/mongodb");
+    const { betterAuth } = await import("better-auth");
+    const { mongodbAdapter } = await import("better-auth/adapters/mongodb");
 
     const uri = process.env.MONGODB_URI;
     if (!uri) {
@@ -26,7 +26,7 @@ const getAuth = async () => {
 
     const baseURL =
       process.env.BETTER_AUTH_URL ||
-      (process.env.VERCEL ? "https://nexora-server-nine.vercel.app" : "http://localhost:5000");
+      (process.env.VERCEL ? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://nexora-server-v2.vercel.app") : "http://localhost:5000");
 
     const secret = process.env.BETTER_AUTH_SECRET;
     if (!secret) {
@@ -46,6 +46,8 @@ const getAuth = async () => {
       "http://localhost:5000",
       "http://localhost:3000",
       "https://nexora-server-nine.vercel.app",
+      "https://nexora-server-v2.vercel.app",
+      "https://nexora-client.vercel.app",
       process.env.CLIENT_URL,
     ].filter(Boolean);
 

@@ -40,6 +40,8 @@ const allowedOrigins = [
   "http://localhost:5000",
   "http://localhost:3000",
   "https://nexora-server-nine.vercel.app",
+  "https://nexora-server-v2.vercel.app",
+  "https://nexora-client.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -82,10 +84,10 @@ app.get("/", (req, res) => {
   res.send("Nexora API Server Running...");
 });
 
-// Better Auth Handler Integration (Lazy Require with Error Boundaries)
+// Better Auth Handler Integration (Lazy Dynamic Import with Error Boundaries)
 app.use("/api/auth", async (req, res, next) => {
   try {
-    const { toNodeHandler } = require("better-auth/node");
+    const { toNodeHandler } = await import("better-auth/node");
     const auth = await getAuth();
     return await toNodeHandler(auth)(req, res);
   } catch (err) {
