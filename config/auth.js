@@ -26,7 +26,7 @@ const getAuth = async () => {
 
     const baseURL =
       process.env.BETTER_AUTH_URL ||
-      (process.env.VERCEL ? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://nexora-server-v2.vercel.app") : "http://localhost:5000");
+      (process.env.VERCEL ? "https://nexora-client-neon.vercel.app" : "http://localhost:5000");
 
     const secret = process.env.BETTER_AUTH_SECRET;
     if (!secret) {
