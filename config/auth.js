@@ -51,6 +51,8 @@ const getAuth = async () => {
       process.env.CLIENT_URL,
     ].filter(Boolean);
 
+    const isProduction = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+
     authInstance = betterAuth({
       database: mongodbAdapter(db),
       secret,
@@ -60,6 +62,19 @@ const getAuth = async () => {
         enabled: true,
       },
       socialProviders,
+      account: {
+        accountLinking: {
+          enabled: true,
+        },
+        skipStateCookieCheck: true, // Prevents state_mismatch error on separate frontend/backend domains on Vercel
+      },
+      advanced: {
+        defaultCookieAttributes: {
+          sameSite: isProduction ? "none" : "lax",
+          secure: isProduction,
+          partitioned: isProduction,
+        },
+      },
     });
   }
 
