@@ -42,6 +42,7 @@ const allowedOrigins = [
   "https://nexora-server-nine.vercel.app",
   "https://nexora-server-v2.vercel.app",
   "https://nexora-client.vercel.app",
+  "https://nexora-client-neon.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
