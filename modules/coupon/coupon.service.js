@@ -23,7 +23,41 @@ const validateCouponInDB = async (code) => {
   };
 };
 
+const defaultLifetimeCoupons = [
+  {
+    code: "WELCOME2026",
+    discount: 20,
+    description: "Exclusive 20% discount on first month rent for new residents (Lifetime Limit).",
+    expiryDate: new Date("2099-12-31"),
+    available: true,
+  },
+  {
+    code: "NEXORAPREMIUM",
+    discount: 15,
+    description: "Special 15% monthly rent concession on long-term 12-month leases (Lifetime Limit).",
+    expiryDate: new Date("2099-12-31"),
+    available: true,
+  },
+  {
+    code: "LIFETIME10",
+    discount: 10,
+    description: "Permanent 10% instant discount voucher valid across all apartment categories (Lifetime Limit).",
+    expiryDate: new Date("2099-12-31"),
+    available: true,
+  },
+];
+
 const getAllCouponsFromDB = async () => {
+  let coupons = await Coupon.find();
+
+  // Ensure default lifetime coupons exist in DB
+  for (const c of defaultLifetimeCoupons) {
+    const exists = coupons.some((item) => item.code === c.code);
+    if (!exists) {
+      await Coupon.create(c);
+    }
+  }
+
   return await Coupon.find();
 };
 

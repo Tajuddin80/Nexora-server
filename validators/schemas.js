@@ -14,6 +14,22 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const createApartmentSchema = z.object({
+  apartmentNo: z.string().min(1, "Apartment number is required"),
+  floorNo: z.number().optional(),
+  blockName: z.string().optional(),
+  rent: z.number().positive("Rent must be positive"),
+  bedroomCount: z.number().optional(),
+  washroomCount: z.number().optional(),
+  kitchenCount: z.number().optional(),
+  squareFeet: z.number().optional(),
+  image: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  video: z.string().optional(),
+  details: z.string().optional(),
+  available: z.boolean().optional(),
+});
+
 const agreementSchema = z.object({
   userName: z.string().optional(),
   userEmail: z.string().email("Invalid user email"),
@@ -50,7 +66,8 @@ const paymentIntentSchema = z.object({
   userEmail: z.string().email("Invalid user email"),
   apartmentNo: z.string().min(1, "Apartment number is required"),
   fullName: z.string().optional(),
-  couponCode: z.string().optional(),
+  couponCode: z.string().nullable().optional(),
+  discountPercent: z.number().optional(),
 });
 
 const validate = (schema) => (req, res, next) => {
@@ -71,6 +88,7 @@ const validate = (schema) => (req, res, next) => {
 module.exports = {
   userSchema,
   loginSchema,
+  createApartmentSchema,
   agreementSchema,
   couponSchema,
   announcementSchema,

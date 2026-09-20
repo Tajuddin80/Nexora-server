@@ -3,6 +3,7 @@ const {
   removeMemberInDB,
   getMemberDueMonthsFromDB,
   getAdminStatsFromDB,
+  getMemberDashboardFromDB,
 } = require("./admin.service");
 
 const getMembers = async (req, res) => {
@@ -51,9 +52,24 @@ const getAdminStats = async (req, res) => {
   }
 };
 
+const getMemberDashboard = async (req, res) => {
+  try {
+    const email = req.query.email || req.user?.email;
+    const dashboardData = await getMemberDashboardFromDB(email);
+    res.json(dashboardData);
+  } catch (err) {
+    if (err.status) {
+      return res.status(err.status).json({ message: err.message });
+    }
+    console.error("GET /member/dashboard error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   getMembers,
   removeMember,
   getMemberDueMonths,
   getAdminStats,
+  getMemberDashboard,
 };
