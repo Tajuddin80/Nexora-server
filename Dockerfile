@@ -2,9 +2,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install production dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --silent
+# Copy package manifests and npm configuration (.npmrc contains legacy-peer-deps=true)
+COPY package.json package-lock.json .npmrc* ./
+
+# Install production dependencies with legacy peer deps support
+RUN npm install --omit=dev --legacy-peer-deps
 
 # Copy application source code
 COPY . .
